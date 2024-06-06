@@ -1,2 +1,2 @@
-# couchDBexport2excel
-Couch DB data export to Excel
+# cloudantexport2excel
+Cloudant DB data export to Excel

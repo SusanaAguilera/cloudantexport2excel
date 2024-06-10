@@ -1,9 +1,9 @@
 # -----------------------------------------------------------
-# class to consult data from Cloudant@IBM
+# class to consult data CouchDB|Cloudant@IBM
 #
-# (C) 2024 MIRA dev Team
-# Released under GNU Public License (GPL)
-# GHE ORG https://github.ibm.com/CIO-Dev-Ops
+# (C) 2024 Mayra Susana Aguilera Cardenas
+# Released under MIT License (MIT)
+# GH Repository https://github.com/SusanaAguilera/cloudantexport2excel 
 # -----------------------------------------------------------
 
 from cloudant.client import Cloudant
@@ -245,78 +245,4 @@ class cloudantDBClass:
             print("The database: "+dbName2Create+" was created successfully")
         except:
             print("Error creating the database: "+dbName2Create)
-    
-    def checkStatus(self, idReplication):
-        try:
-            state = self.rep.replication_state(idReplication)
-            print("Replication : "+str(idReplication)+" state:"+str(state))
-            if state != "running":
-                self.timer.stop()
-        except:
-            print("Error checking the replication status")
-            
-    def replicate(self, dbNameSource, dbNameTarget,credSource, credTarget):
-        try:
-            print("\n************** REPLICATION PROCESS STARTED **************")
-            print("\n*************** CLIENT CONNECTION ***************")
-            sourceClient = Cloudant(credSource["USERDB"],
-                                credSource["PASSDB"],
-                                url=credSource["URLDB"],
-                                connect=True,
-                                auto_renew=True)
-            sourceClient.session()
-            print('Cloudant source client created')
-            print("\n*************** Target CONNECTION ***************")
-            targetClient = Cloudant(credTarget["USERDB"],
-                                credTarget["PASSDB"],
-                                url=credTarget["URLDB"],
-                                connect=True,
-                                auto_renew=True)
-            targetClient.session()
-            print('Cloudant target client created')
-            self.rep = Replicator(sourceClient)
-            replication = self.rep.create_replication(
-                    source_db=sourceClient[dbNameSource],
-                    target_db=targetClient[dbNameTarget],
-                    continuous=False,
-                    selector={"_deleted": {"$exists": False}}
-                    )
-            print('Replication document: {}'.format(replication["_id"]) )
-            print('Wait until reaplication is completed.')
-            self.timer = multitimer.MultiTimer(interval=10, function=self.checkStatus, kwargs={'idReplication':replication["_id"]})
-            self.timer.start()
-        except CloudantDatabaseException as error:
-            print("There was a problem connecting to the data base...")
-            print(error)
-        except CloudantReplicatorException as error:
-            print("There was a problem creating replication ...")
-            print(error)
-        except CloudantException as error:
-            print("another problem on Cloudant...")
-            print(error)
-        except KeyError as err:
-            print('{} Database not exist on the instance'.format(err))
-    
-    def getView4CleanUp(self, designDoc, viewName, qs):
-        try:
-            print("executing view : "+viewName+" of the designdoc: "+designDoc+" for the Q: "+qs[0])            
-            viewResult = self.my_database.get_view_result('_design/'+designDoc, viewName, include_docs=True, key= qs[0])
-            arrayView = []
-            for doc in viewResult:
-                doc['doc']['_deleted']= True;
-                arrayView.append(doc['doc']);
-            return arrayView
-        except:
-            print("Error retrieving view")
-            
-    def getView2Delete(self, designDoc, viewName):
-        try:
-            print("executing view : "+viewName+" of the designdoc: "+designDoc)            
-            viewResult = self.my_database.get_view_result('_design/'+designDoc, viewName, include_docs=True)
-            arrayView = []
-            for doc in viewResult:
-                doc['doc']['_deleted']= True;
-                arrayView.append(doc['doc']);
-            return arrayView
-        except:
-            print("Error retrieving view")
+

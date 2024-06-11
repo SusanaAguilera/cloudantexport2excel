@@ -15,33 +15,27 @@ def main():
     try:
         cloudant = cloudantDBClass()
         excelFormat = excelFormatting()
-        with open('queries/getAssessments.json') as json_file:
-            queries = json.load(json_file)
+        with open('queries/queries.json') as json_file:
+            topics = json.load(json_file)
         dbCred = json.loads(os.getenv("DBSOURCE"))
-
         if (cloudant.loadCredentials(dbCred) and cloudant.connectToCloudant()):
-            cloudant.connectToDB(dbCred["NAMEDB"])
-            print("Successfully connected!")
-            docs=[]    
-            for query in queries:
-                docs += cloudant.queryDocument("get data", queries[query]["selector"])
-            print(f"{str(len(docs))} docs retrieved");
-            docs_df = pd.DataFrame(docs);
-            docs_df = docs_df.drop(columns=["_id","_rev","parentid"]);
-            file_path = 'assessments'
-            if(excelFormat.createWriter(file_path,"Assessments",docs_df)):
-                print("Excel file created !!!!");
-                print("Formatting the Excel file .....");
-                excelFormat.setSheet("Assessments")
-                excelFormat.setHeaderFormat({
-                "bold": True,
-                "text_wrap": True,
-                "valign": "top",
-                "fg_color": "#D7E4BC",
-                "border": 1,
-                },docs_df);
-                excelFormat.closeWriter();
-                print("Process End!!");
+            cloudant.connectToDB(dbCred["NAMEDB"]);
+            print("Successfully connected!");
+            for key in topics:
+                columns2Delete = topics[key]["columns2Delete"] if topics[key]["columns2Delete"] else [];
+                excelFileName = topics[key]["excelName"] if topics[key]["excelName"] else "";
+                format4Excel = topics[key]["format4excel"] if (topics[key]["format4excel"]) else {} ;
+                docs = cloudant.queryDocument("get data", topics[key]["selector"])
+                print(f"{str(len(docs))} docs retrieved");
+                docs_df = pd.DataFrame(docs);
+                docs_df = docs_df.drop(columns=columns2Delete);
+                if(excelFormat.createWriter(excelFileName,excelFileName,docs_df)):
+                    print("Excel file created !!!!");
+                    print("Formatting the Excel file .....");
+                    excelFormat.setSheet(excelFileName)
+                    excelFormat.setHeaderFormat(format4Excel["header"],docs_df);
+                    excelFormat.closeWriter();
+                    print("Process End!!");
     except Exception as e: 
         print("Error at Main");
         print(e);

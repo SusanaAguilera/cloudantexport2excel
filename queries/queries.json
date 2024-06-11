@@ -1,0 +1,22 @@
+{
+    "XXXX": {
+        "selector": {
+            "XXXX": "XXXX"
+        },
+        "columns2Delete": [
+            "XXXX",
+            "XXXX",
+            "XXXX"
+        ],
+        "excelName": "XXXX",
+        "format4excel": {
+            "header": {
+                "bold": true,
+                "text_wrap": true,
+                "valign": "top",
+                "fg_color": "#D7E4BC",
+                "border": 1
+            }
+        }
+    }
+}

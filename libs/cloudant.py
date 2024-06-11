@@ -21,22 +21,48 @@ load_dotenv()
 
 class cloudantDBClass:
     """
-        cloudantDBClass used to establish a connection with a cloudant instance && for data consulting && insertion.
-    """
+        cloudantDBClass used to establish a connection with a cloudant instance && for data consulting && insertion..
+        
+        Attributes:
+            my_database [dict]\n
+            client [dict]\n
+            rep [dict]\n
+            passDB [String]\n
+            userDB [String]\n
+            urlDB [String]\n
+        Methods:
+            loadCredentials(self, DBVars={}): load .env file credentials in order to connect to the DB instance.\n
+            connectToCloudant(self): used to get a Connection to Cloudant instance.\n
+            connectToDB(self, dbName="", dataFrame={}): used to point a Cloudant database.\n
+            queryDocument(self, queryname="", query={}, fields=[], sort="", index=""): used to perform a query to a Cloudant database.\n
+            disconnectCloudant(self): disconnectCloudant used to lost the connection to Cloudant instance.\n
+            insertDocument(self, doc={}): used insert a new doc into a Cloudant database.\n
+            deleteDocument(self,id=""): used to delete an existing document in a Cloudant database.\n
+            getDocument(self, id=""): getDocument used to get an existing single document in a Cloudant database.\n
+            updateDocument(self, id, newVal): Update of an existing document in DB.\n
+            searchInDocument(self, doc, newVal): Auxiliar function of updateDocument(), used to update values in nested Dictionaries.\n
+            getView(self, designDoc, viewName): Retrieves a View.\n
+            bulk(self, docs): Push a bunch of documents on one time over the database.\n
+            chunkIt(self, seq, num): Chunks an Array very large into an Array of Arrays.\n
+            bulkByBlocks(self, arrayToUpdate, blocks): If the initial Array of docs to bulk is pretty huge, this functions perfoms the bulk in phases.\n
+            listDB(self): list the databases of a Cloudant/couch db Instance.\n
+            destroyDB(self, dbName2Delete): Destroys a single Cloudant/couch db from the Instance.\n
+            createDB(self, dbName2Create): Creates a single Cloudant/couch db from the Instance.\n
+    """ 
     my_database = {}
     client = {}
     rep = {}
     passDB = ""
     userDB = ""
     urlDB = ""
-    timer = ""
-    print_lock = threading.Lock()
 
-    def loadCredentials(self, DBVars):
+    def loadCredentials(self, DBVars={}):
         """
-            loadCredentials used to load .env file credentials in order to connect to the DB instance
-            :param DBVars: Json with the DB credentials
-            :return: boolean flag
+            loadCredentials used to load .env file credentials in order to connect to the DB instance.\n
+            Args:
+                DBVars : Dict
+            Returns:
+                Boolean
         """
         try:
             self.userDB = DBVars["USERDB"]
@@ -44,14 +70,18 @@ class cloudantDBClass:
             self.urlDB = DBVars["URLDB"]
             print('Credentials loaded ...')
             return True
-        except:
-            print("There was a problem loading the credentials...")
-            return False
-
+        except Exception as e:
+            print('Error at [libs][cloudantDBClass][loadCredentials].-')
+            print(e);
+            return (False);
+        
     def connectToCloudant(self):
         """
-            connectToCloudant used to get a Connection to Cloudant instance
-            :return: boolean flag
+            connectToCloudant used to get a Connection to Cloudant instance.\n
+            Args:
+            
+            Returns:
+                Boolean
         """
         try:
             self.client = Cloudant(self.userDB,
@@ -61,34 +91,40 @@ class cloudantDBClass:
                                    auto_renew=True)
             self.client.session()
             print('Cloudant connected ...')
-            return True
-        except:
-            print("There was a problem connecting to Cloudant DB...")
-            return False
-
+            return True;
+        except Exception as e:
+            print('Error at [libs][cloudantDBClass][connectToCloudant].-')
+            print(e);
+            return (False);
+        
     def connectToDB(self, dbName=""):
         """
-            connectToDB used to point a Cloudant database
-            :param dbName: String Name of the Database
-            :return: boolean flag
+            connectToDB used to point a Cloudant database.\n
+            Args:
+                dbName : String
+            Returns:
+                Boolean
         """
         try:
             self.my_database = self.client[dbName]
             print("Connected to the data base .....",dbName)
-            return self.my_database
-        except:
-            print("There was a problem connecting to the data base...")
-            return False
+            return True;
+        except Exception as e:
+            print('Error at [libs][cloudantDBClass][connectToDB].-')
+            print(e);
+            return (False);
             
     def queryDocument(self, queryname="", query={}, fields=[], sort="", index=""):
         """
-            queryDocument used to perform a query to a Cloudant database
-            :param queryname: String Name of the query
-            :param query: String Name of the query
-            :param fields: Array of the fields desired to retrieve
-            :param sort: Array of the Sort Value
-            :param index: String Name of the Index
-            :return: Array of Cloudant Documents(JSONs) 
+            queryDocument used to perform a query to a Cloudant database.\n
+            Args:
+                queryname : String
+                query : Dict
+                fields : Array
+                sort : String
+                index : String
+            Returns:
+                Array
         """
         try:
             docs = self.my_database.get_query_result(query, fields=fields, use_index = index)
@@ -97,45 +133,53 @@ class cloudantDBClass:
                 queryResult.append(doc)
             print('Succesfully retrieved ' + queryname + ' query')
             return queryResult
-        except OSError as err:
-            print("OS error: {0}".format(err))
-            return False
+        except Exception as e:
+            print('Error at [libs][cloudantDBClass][queryDocument].-')
+            print(e);
+            return [];
 
     def disconnectCloudant(self):
         """
-            disconnectCloudant used to lost the connection to Cloudant instance
-            :return: boolean flag
+            disconnectCloudant used to lost the connection to Cloudant instance.\n
+            Args:
+            
+            Returns:
+                Boolean
         """
-        # Disconection from client
         try:
             self.client.disconnect()
             print('Cloudant disconnected ...')
             return True
-        except:
-            print("There was a problem connecting to the data base...")
+        except Exception as e:
+            print('Error at [libs][cloudantDBClass][disconnectCloudant].-')
+            print(e);
             return False
-
 
     def insertDocument(self, doc={}):
         """
-            insertDocument used insert a new doc into a Cloudant database
-            :param doc: json document
-            :return: boolean flag
+            insertDocument used insert a new doc into a Cloudant database.\n
+            Args:
+                doc : Dict
+            Returns:
+                Boolean
         """
         try:
             my_document = self.my_database.create_document(doc)
             if my_document.exists():
                 print('Document Inserted')
                 return True
-        except:
-            print('There was an error inserting the document')
-            return False
+        except Exception as e:
+            print('Error at [libs][cloudantDBClass][insertDocument].-')
+            print(e);
+            return False;
 
     def deleteDocument(self,id=""):
         """
-            deleteDocument used to delete an existing document in a Cloudant database
-            :param id: String document _id
-            :return: boolean flag
+            deleteDocument used to delete an existing document in a Cloudant database.\n
+            Args:
+                id : String
+            Returns:
+                Boolean
         """
         try:
             my_document = self.my_database[id]
@@ -143,28 +187,41 @@ class cloudantDBClass:
             if my_document.exists():
                 print('Document erased ...')
                 return True
-        except:
-            print('There was an error deleting the document')
+        except Exception as e:
+            print('Error at [libs][cloudantDBClass][deleteDocument].-')
+            print(e);
+            return False;
             
     def getDocument(self, id=""):
         """
-            getDocument used to get an existing single document in a Cloudant database
-            :param id: String document _id
-            :return: json cloudant document
+            getDocument used to get an existing single document in a Cloudant database.\n
+            Args:
+                id : String
+            Returns:
+                Dict
         """
         try:
             my_document = self.my_database[id]
             if my_document:
                 return my_document;
             else:
-                return False;
-        except:
-            print('There was an error getting the document')
+                return {};
+        except Exception as e:
+            print('Error at [libs][cloudantDBClass][getDocument].-')
+            print(e);
+            return {};
 
-    def updateDocument(self, id, newVal):
-        # Update of an existing document in DB.
-        # Data must follow the JSON format which will indicates
-        # the path of the change E.g.: {"key":{"key":"value"}}
+    def updateDocument(self, id="", newVal={}):
+        """
+            Update of an existing document in DB.
+            Data must follow the JSON format which will indicates
+            the path of the change E.g.: {"key":{"key":"value"}}.\n
+            Args:
+                id : String
+                newVal : Dict
+            Returns:
+                Boolean
+        """
         try:
             my_document = self.my_database[id]
             if my_document.exists():
@@ -172,11 +229,20 @@ class cloudantDBClass:
                 updated_doc.save()
                 print(id,' has been updated.')
                 return True
-        except:
-            print('There was an error updating the document')
+        except Exception as e:
+            print('Error at [libs][cloudantDBClass][updateDocument].-')
+            print(e);
+            return False;
     
-    def searchInDocument(self, doc, newVal):
-        # Update aux recursive function to search the path of the change
+    def searchInDocument(self, doc={}, newVal={}):
+        """
+            Auxiliar function of updateDocument(), used to update values in nested Dictionaries.\n
+            Args:
+                doc : Dict
+                newVal : Dict
+            Returns:
+                Dict
+        """
         try: 
             for key in newVal:
                 searchKey = key
@@ -192,57 +258,129 @@ class cloudantDBClass:
             elif type(searchVal) == str:
                 doc[searchKey] = searchVal
                 return doc
-        except:
-            print('Error while searching')
+        except Exception as e:
+            print('Error at [libs][cloudantDBClass][searchInDocument].-')
+            print(e);
+            return {};
     
-    def getView(self, designDoc, viewName):
+    def getView(self, designDoc="", viewName=""):
+        """
+            Retrieves a View.\n
+            Args:
+                designDoc : String
+                viewName : String
+            Returns:
+                Dict
+        """
         try:         
-            view = self.my_database.get_view_result('_design/'+designDoc, viewName, include_docs=True, reduce=False)
-            return view
-        except:
-            print("Error retrieving view")
+            view = self.my_database.get_view_result('_design/'+designDoc, viewName, include_docs=True, reduce=False);
+            return view;
+        except Exception as e:
+            print('Error at [libs][cloudantDBClass][getView].-')
+            print(e);
+            return({});
     
-    def bulk(self, docs):
+    def bulk(self, docs=[]):
+        """
+            Push a bunch of documents on one time over the database.\n
+            Args:
+                docs : []
+            Returns:
+                Boolean
+        """
         try:
             self.my_database.bulk_docs(docs)
             print("Successfully bulk of "+str(len(docs))+" docs.")
-        except:
-            print("Error bulk of  data")
+            return True;
+        except Exception as e:
+            print('Error at [libs][cloudantDBClass][bulk].-')
+            print(e);
+            return False;
 
-    def chunkIt(self, seq, num):
-        avg = len(seq) / float(num)
-        out = []
-        last = 0.0
-        while last < len(seq):    
-            out.append(seq[int(last):int(last + avg)])
-            last += avg
-        return out
+    def chunkIt(self, seq=[], num=0):
+        """
+            Chunks an Array very large into an Array of Arrays.\n
+            Args:
+                seq : Array
+                num : Integer
+            Returns:
+                Array
+        """
+        try:
+            avg = len(seq) / float(num)
+            out = []
+            last = 0.0
+            while last < len(seq):    
+                out.append(seq[int(last):int(last + avg)])
+                last += avg
+            return out
+        except Exception as e:
+            print('Error at [libs][cloudantDBClass][chunkIt].-')
+            print(e);
+            return [];
     
-    def bulkByBlocks(self, arrayToUpdate, blocks):
-        arrayToBulk = self.chunkIt(arrayToUpdate, blocks)
-        for arrayBulk in arrayToBulk:
-            print("Docs to bulk "+str(len(arrayBulk)))
-            if(self.bulk(arrayBulk)): 
-                print("bulk successfully")
+    def bulkByBlocks(self, arrayToUpdate=[], blocks=0):
+        """
+            If the initial Array of docs to bulk is pretty huge, this functions perfoms the bulk in phases.\n
+            Args:
+                arrayToUpdate : Array
+                blocks : Integer
+            Returns:
+                None
+        """
+        try:
+            arrayToBulk = self.chunkIt(arrayToUpdate, blocks)
+            for arrayBulk in arrayToBulk:
+                print("Docs to bulk "+str(len(arrayBulk)))
+                if(self.bulk(arrayBulk)): 
+                    print("bulk successfully")
+        except Exception as e:
+            print('Error at [libs][cloudantDBClass][bulkByBlocks].-')
+            print(e);    
     
     def listDB(self):
+        """
+            list the databases of a Cloudant/couch db Instance.\n
+            Args:
+            
+            Returns:
+                Array
+        """
         try:
             allDbs = self.client.all_dbs()
             return allDbs;
-        except:
-            print("Error Listing the db names")
+        except Exception as e:
+            print('Error at [libs][cloudantDBClass][listDB].-')
+            print(e); 
+            return [];
     
     def destroyDB(self, dbName2Delete):
+        """
+            Destroys a single Cloudant/couch db from the Instance.\n
+            Args:
+                dbName2Delete : String
+            Returns:
+                None
+        """
         try:
             self.client.delete_database(dbName2Delete);
             print("The database: "+dbName2Delete+" was destroyed successfully")
-        except:
-            print("Error destroying the database: "+dbName2Delete)
+        except Exception as e:
+            print('Error at [libs][cloudantDBClass][destroyDB].-')
+            print(e);
             
     def createDB(self, dbName2Create):
+        """
+            Creates a single Cloudant/couch db from the Instance.\n
+            Args:
+                dbName2Create : String
+            Returns:
+                None
+        """
         try:
             self.client.create_database(dbName2Create);
             print("The database: "+dbName2Create+" was created successfully")
-        except:
-            print("Error creating the database: "+dbName2Create)
+        except Exception as e:
+            print('Error at [libs][cloudantDBClass][createDB].-')
+            print(e);
 

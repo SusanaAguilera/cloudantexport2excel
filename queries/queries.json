@@ -3,11 +3,11 @@
         "selector": {
             "XXXX": "XXXX"
         },
-        "columns2Delete": [
-            "XXXX",
-            "XXXX",
-            "XXXX"
-        ],
+        "equivalneces": {
+            "XXXX": "XXXX",
+            "XXXX": "XXXX",
+            "XXXX": "XXXX"
+        },
         "excelName": "XXXX",
         "format4excel": {
             "header": {

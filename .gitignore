@@ -138,3 +138,4 @@ dmypy.json
 d:*
 *.xlsx
 libs/__pycache__/*
+.~lock.Assessments.xlsx#
